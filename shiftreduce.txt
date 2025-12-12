@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+char input[100];
+char stack[100];
+int input_ptr = 0;
+char user_productions[20][50];
+int num_productions;
+
+void print_state(const char* action) {
+    printf("%-20s%-20s%-20s\n", stack, &input[input_ptr], action);
+}
+
+void parse() {
+    stack[0] = '$';
+    stack[1] = '\0';
+
+    char start_symbol = user_productions[0][0];
+    char accept_condition[4];
+    sprintf(accept_condition, "$%c", start_symbol);
+
+    printf("\n%-20s%-20s%-20s\n", "Stack", "Input", "Action");
+    print_state("Initial");
+
+    while (1) {
+        int action_taken = 0;
+
+        // Try to reduce first
+        for (int i = 0; i < num_productions; i++) {
+            char lhs = user_productions[i][0];
+            char* rhs = &user_productions[i][2]; // skip LHS and '='
+            int rhs_len = strlen(rhs);
+            int stack_len = strlen(stack);
+
+            // Check if top of stack matches RHS
+            if (stack_len >= rhs_len && strcmp(&stack[stack_len - rhs_len], rhs) == 0) {
+                stack_len -= rhs_len;
+                stack[stack_len] = lhs;
+                stack[stack_len + 1] = '\0';
+
+                char action_str[100];
+                sprintf(action_str, "Reduce %s", user_productions[i]);
+                print_state(action_str);
+
+                action_taken = 1;
+                break;
+            }
+        }
+
+        if (action_taken) continue;
+
+        // If no reduction possible, shift next input symbol
+        if (input[input_ptr] != '\0') {
+            int stack_len = strlen(stack);
+            stack[stack_len] = input[input_ptr];
+            stack[stack_len + 1] = '\0';
+            input_ptr++;
+
+            print_state("Shift");
+            action_taken = 1;
+        }
+
+        // If no action taken — either accept or reject
+        if (!action_taken) {
+            if (strcmp(stack, accept_condition) == 0 && input[input_ptr] == '\0') {
+                printf("\n Success! String is accepted.\n");
+            } else {
+                printf("\n Error! String is rejected.\n");
+            }
+            break;
+        }
+    }
+}
+
+int main() {
+    printf("Enter the number of productions: ");
+    scanf("%d", &num_productions);
+
+    printf("Enter the productions (e.g., E=E+E, no spaces):\n");
+    for (int i = 0; i < num_productions; i++) {
+        scanf("%s", user_productions[i]);
+    }
+
+    printf("Enter the input string: ");
+    scanf("%s", input);
+
+    parse();
+    return 0;
+}
