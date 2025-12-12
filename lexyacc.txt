@@ -1,0 +1,206 @@
+Day2: 
+2. a) Line Word Character count 
+Code: 
+%{ 
+#include <stdio.h> 
+int n = 0; 
+int w = 0; 
+int c = 0; 
+%} 
+%% 
+[^ \t\n]+ {w++; c+=yyleng;} 
+\n {n++; c++;} 
+. {c++;} 
+%% 
+int main() { 
+yylex(); 
+printf("Lines   
+printf("Words    
+: %d\n",n); 
+: %d\n",w); 
+printf("Characters : %d\n",c); 
+return 0; 
+} 
+Output: 
+b) Email 
+Code: 
+%{ 
+#include <stdio.h> 
+%} 
+%% 
+[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\n {printf("Valid Email id: %s\n",yytext);} 
+.*\n {printf("Invalid Email\n");} 
+%% 
+int main() { 
+yylex(); 
+return 0; 
+} 
+Output: 
+c) Vowel Consonant Count 
+Code: 
+%{ 
+#include <stdio.h> 
+int v = 0; 
+int c = 0; 
+%} 
+%% 
+[aeiouAEIOU] {v++;} 
+[a-zA-Z] {c++;} 
+. { } 
+%% 
+int main() { 
+yylex(); 
+printf("Vowels    
+: %d\n",v); 
+printf("Consonants : %d\n",c); 
+return 0; 
+} 
+Output: 
+Day3: 
+3. a) Valid expression 
+Code: 
+Lex: 
+%{ 
+#include "y.tab.h" 
+%} 
+%% 
+[0-9]+   { return NUMBER; } 
+[+\-*/()\n] { return yytext[0]; } 
+[ \t]    
+; 
+.        
+%% 
+{ printf("Unknown character: %s\n", yytext); } 
+int yywrap() { 
+return 1; 
+} 
+YACC: 
+%{ 
+#include <stdio.h> 
+#include <stdlib.h> 
+int yylex(void); 
+void yyerror(const char *s); 
+%} 
+%token NUMBER 
+%left '+' '-' 
+%left '*' '/' 
+%left UMINUS 
+%% 
+program: 
+expr '\n' { printf("Valid\n"); } 
+; 
+expr: 
+NUMBER 
+| expr '+' expr 
+| expr '-' expr 
+| expr '*' expr 
+| expr '/' expr 
+| '-' expr %prec UMINUS 
+| '(' expr ')' 
+; 
+%% 
+int main() { 
+printf("Enter an expression:\n"); 
+yyparse(); 
+return 0; 
+} 
+void yyerror(const char *s) { 
+printf("Invalid\n"); 
+} 
+b) Valid Identifier 
+Code: 
+Lex: 
+%{ 
+#include "y.tab.h" 
+%} 
+%% 
+[a-zA-Z] 
+[0-9]    
+{ return LETTER; } 
+{ return DIGIT; } 
+[\n]     
+[ \t]    
+.        
+%% 
+{ return yytext[0]; } 
+; 
+{ printf("Unknown character: %s\n", yytext); } 
+int yywrap() { 
+return 1; 
+} 
+YACC: 
+%{ 
+#include <stdio.h> 
+#include <stdlib.h> 
+int yylex(void); 
+void yyerror(const char *s); 
+%} 
+%token LETTER DIGIT 
+%start program 
+%% 
+program: 
+identifier '\n' { printf("Valid\n"); } 
+; 
+identifier: 
+LETTER 
+| identifier LETTER 
+| identifier DIGIT 
+; 
+%% 
+int main() { 
+printf("Enter an identifier:\n"); 
+yyparse(); 
+return 0; 
+} 
+void yyerror(const char *s) { 
+printf("Invalid\n"); 
+} 
+Output: 
+Day4: 
+Code: 
+Lex: 
+%{ 
+#include "y.tab.h" 
+%} 
+%% 
+[0-9]+ { yylval = atoi(yytext); return NUMBER; } 
+[+\-*/()] { return yytext[0]; } 
+[ \t\n] ; 
+. { printf("Unknown character: %s\n", yytext); } 
+%% 
+YACC: 
+%{ 
+#include <stdio.h> 
+#include <stdlib.h> 
+%} 
+%token NUMBER 
+%left '+' '-' 
+%left '*' '/' 
+%left UMINUS 
+%% 
+expr: 
+expr '+' expr { printf("%d + %d = %d\n", $1, $3, $1 + $3); $$ = $1 + $3; } 
+| expr '-' expr { printf("%d - %d = %d\n", $1, $3, $1 - $3); $$ = $1 - $3; } 
+| expr '*' expr { printf("%d * %d = %d\n", $1, $3, $1 * $3); $$ = $1 * $3; } 
+| expr '/' expr { 
+if ($3 == 0) { 
+printf("Error: Division by zero\n"); exit(1); 
+} 
+printf("%d / %d = %d\n", $1, $3, $1 / $3); 
+$$ = $1 / $3; 
+} 
+| '-' expr %prec UMINUS { $$ = -$2; } 
+| '(' expr ')' { $$ = $2; } 
+| NUMBER { $$ = $1; } 
+; 
+%% 
+int main() { 
+printf("Enter an expression:\n"); 
+yyparse(); 
+return 0; 
+} 
+int yyerror(const char *s) { 
+printf("Syntax Error: %s\n", s); 
+return 1; 
+} 
+Output: 
